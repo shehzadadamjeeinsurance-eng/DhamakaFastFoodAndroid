@@ -1,26 +1,42 @@
-# DHAMAKA FAST FOOD Android App (Website-matched WebView)
 
-This Android wrapper opens the live DHAMAKA FAST FOOD website inside a native Android shell, so the customer UI remains the same as the website and stays updated automatically.
+name: Build Android APK
 
-## App behavior
-- Loads https://dhamaka-fast-food.hatchable.site/
-- Same website UI, menu, prices, cart, account, tracking, checkout and pages
-- Android app shell has no browser address bar
-- Android back button navigates web history
-- Swipe down refresh and top progress bar
-- HTTPS-only, internal website stays in app; external links open in browser/app
-- Internet required; app contents are hosted online
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
 
-## Build APK (easy cloud build)
-1. Create a GitHub repository and upload this project.
-2. Go to Actions and run the workflow **Build Android APK** (or push to main).
-3. Download the `DhamakaFastFood-debug-apk` artifact from the workflow run.
-4. Transfer the APK to Android phone and install. Allow install from the source you used if Android asks.
+permissions:
+  contents: read
 
-## Build locally
-Install Android Studio, open this project, let Gradle sync, then Build > Build APK(s).
-Debug APK output: `app/build/outputs/apk/debug/app-debug.apk`.
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-## Notes
-- This project is a website wrapper, not a separate redesigned app. Website edits will appear in the app.
-- This starter build is unsigned debug APK. Play Store release requires a signed release build and store assets.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Build APK
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: '8.9'
+          arguments: assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DhamakaFastFood-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
